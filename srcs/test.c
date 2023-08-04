@@ -1,31 +1,39 @@
 #include "pipex.h"
 
+
 int	main(int argc, char **argv, char **envp)
 {
-	int		fd;
-	int		du;
-	int		stdout_save;
+	int		infd;
+	int		pipefd[2];
+	char	buf;
 	pid_t	cpid;
-	int		bytes_read;
-	int		pipedes[2];
-	char	buf[1];
-
-	fd = open("test", O_RDWR);
-	stdout_save = dup(1);
-	pipe(pipedes);
-	close(1);
-	ft_printf("fd%d du%d\n", fd, du);
-	dup2(pipedes[1], 1);
-	write(1, "voilala", 7);
-	close(pipedes[1]);
-	while (1)
+/* 	if (argc < 5)
+		return ((perror("Wrong arguments\n"), 0)); */
+	if (pipe(pipefd) == -1)
+		perror("pipe\n");
+	infd = open(argv[1], O_RDONLY);
+	if (infd == -1)
 	{
-		bytes_read = read(pipedes[0], buf, 1);
-		if (bytes_read == 0)
-			break ;
-		/* write(stdout_save, buf, 1); */
+		perror("weird ass file\n");
+		exit(0);
 	}
-	close(pipedes[0]);
-	_exit(EXIT_SUCCESS);
+	cpid = fork();
+	if (cpid == 0)
+	{
+		ft_printf("hello im the child");
+		close(pipefd[0]);
+		dup2(infd, 0);
+		while (read(0, &buf, 1))
+			write (pipefd[1], &buf, 1);
+		exit(0);
+	}
+	cpid = fork();
+	if (cpid == 0)
+	{
+		while (read(pipefd[0], &buf, 1))
+			write (1, &buf, 1);
+		wait(0);
+		exit(0);
+	}
 	return (0);
 }
