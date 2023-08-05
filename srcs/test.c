@@ -1,16 +1,23 @@
 #include "pipex.h"
 
+void	execution(char *cmd, char **envp)
+{
+
+}
 
 int	main(int argc, char **argv, char **envp)
 {
 	int		infd;
-	int		pipefd[2];
+	int		inpipe[2];
+	int		outpipe[2];
 	char	buf;
 	pid_t	cpid;
 /* 	if (argc < 5)
 		return ((perror("Wrong arguments\n"), 0)); */
-	if (pipe(pipefd) == -1)
-		perror("pipe\n");
+	if (pipe(inpipe) == -1)
+		perror("pipe");
+	if (pipe(outpipe) == -1);
+		prerror("pipe");
 	infd = open(argv[1], O_RDONLY);
 	if (infd == -1)
 	{
@@ -21,10 +28,10 @@ int	main(int argc, char **argv, char **envp)
 	if (cpid == 0)
 	{
 		ft_printf("hello im the child");
-		close(pipefd[0]);
+		close(inpipe[0]);
 		dup2(infd, 0);
 		while (read(0, &buf, 1))
-			write (pipefd[1], &buf, 1);
+			write (inpipe[1], &buf, 1);
 		exit(0);
 	}
 	cpid = fork();
