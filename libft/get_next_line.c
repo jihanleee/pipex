@@ -6,7 +6,7 @@
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 15:50:05 by jihalee           #+#    #+#             */
-/*   Updated: 2023/06/22 16:46:06 by jihalee          ###   ########.fr       */
+/*   Updated: 2023/07/17 16:59:40 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@ void	find_nl(char *buf, int *i, int *j, int *eol_found)
 
 int	add_to_list(char *buf, t_list_gnl **list, t_list_gnl **current)
 {
-	int		i;
-	int		j;
-	int		eol_found;
+	int			i;
+	int			j;
+	int			eol_found;
 	t_list_gnl	*new;
 
 	eol_found = 0;
@@ -55,10 +55,10 @@ int	add_to_list(char *buf, t_list_gnl **list, t_list_gnl **current)
 
 int	make_list(int fd, t_list_gnl **list)
 {
-	char	*buf;
-	int		size_read;
+	char		*buf;
+	int			size_read;
 	t_list_gnl	*current;
-	int		r_addtolist;
+	int			r_addtolist;
 
 	r_addtolist = 0;
 	buf = (char *)malloc(sizeof (char) * (BUFFER_SIZE + 1));
@@ -112,8 +112,8 @@ char	*extract_line(t_list_gnl *list, t_list_gnl **first)
 char	*get_next_line(int fd)
 {
 	static t_list_gnl	*list;
-	char			*result;
-	int				r_makelist;
+	char				*result;
+	int					r_makelist;
 
 	if (fd < 0)
 		return (NULL);

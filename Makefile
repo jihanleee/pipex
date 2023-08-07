@@ -20,7 +20,7 @@ SRC_FILES_LIBFT = $(addprefix $(DIR_LIBFT), $(SRC_LIBFT))
 
 OBJ_FILES_LIBFT = $(SRC_FILES_LIBFT:.c=.o)
 
-SRCS = test.c
+SRCS = main.c
 
 SRC_FILES = $(addprefix $(SRC_DIR), $(SRCS))
 

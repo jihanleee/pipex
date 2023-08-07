@@ -6,7 +6,7 @@
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/14 15:30:32 by jihalee           #+#    #+#             */
-/*   Updated: 2023/07/04 00:11:39 by jihalee          ###   ########.fr       */
+/*   Updated: 2023/07/17 17:00:12 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,4 +80,3 @@ int	ft_atoi_base(char *str, char *base)
 	}
 	return (result * sign);
 }
-
