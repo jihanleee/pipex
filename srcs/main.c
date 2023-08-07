@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   test.c                                             :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 16:28:41 by jihalee           #+#    #+#             */
-/*   Updated: 2023/08/07 16:50:28 by jihalee          ###   ########.fr       */
+/*   Updated: 2023/08/07 19:26:42 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ char	*find_cmd_path(char *cmd, char **envp)
 	return (withcmd);
 }
 
-void	exec_child(char *cmd, int infd, int outfd, char **envp)
+void	exec_child1(char *cmd, int infd, int pipefd[2], char **envp)
 {
 	pid_t	cpid;
 	char	*cmd_path;
@@ -89,50 +89,66 @@ void	exec_child(char *cmd, int infd, int outfd, char **envp)
 			ft_putstr_fd("malloc error\n", 2);
 			exit(EXIT_FAILURE);
 		}
-		dup2(infd, 0);
-		dup2(outfd, 1);
+		close(pipefd[0]);
+		if (infd != 1)
+			dup2(pipefd[1], 1);
 		execve(cmd_path, argv, envp);
 	}
+	close(pipefd[1]);
 }
 
-void	exec(char *cmd, int *inpipe, int *outpipe, char **envp)
+void	exec_child2(char *cmd, int outfd, int pipefd[2], char **envp)
 {
+	pid_t	cpid;
+	char	*cmd_path;
+	char	**argv;
 	char	buf;
 
-	close(inpipe[1]);
-	exec_child(cmd, inpipe[0], outpipe[1], envp);
-	close(inpipe[0]);
-	pipe(inpipe);
-	close(outpipe[1]);
-	while (read(outpipe[0], &buf, 1))
-		write(inpipe[1], &buf, 1);
-	close(outpipe[0]);
-	pipe(outpipe);
-	wait(0);
+	cpid = fork();//protect fork
+	if (cpid == 0)
+	{
+		argv = ft_split(cmd, ' ');
+		if (!argv)
+		{
+			ft_putstr_fd("malloc error\n", 2);
+			exit(EXIT_FAILURE);
+		}
+		cmd_path = find_cmd_path(argv[0], envp);
+		if (!cmd_path)
+		{
+			ft_putstr_fd("malloc error\n", 2);
+			exit(EXIT_FAILURE);
+		}
+		/* close(pipefd[1]); */
+		dup2(pipefd[0], 0);
+		if (outfd != 1)
+			dup2(outfd, 1);
+		execve(cmd_path, argv, envp);
+	}
+	close(pipefd[0]);
 }
+
 
 int	main(int argc, char **argv, char **envp)
 {
 	int		infd;
 	int		outfd;
-	int		inpipe[2];
-	int		outpipe[2];
+	int		pipefd[2];
 	char	buf;
+	int		wstatus;
 
 	if (argc != 5)
 		return ((ft_putstr_fd("Wrong arguments\n", 2), EXIT_FAILURE));
-	if (pipe(inpipe) == -1 || pipe(outpipe) == -1)
+	if (pipe(pipefd) == -1)
 		return ((perror("pipe"), EXIT_FAILURE));
 	outfd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	infd = open(argv[1], O_RDONLY);
+	infd = open(argv[1], O_RDWR);
 	if (outfd == -1 || infd == -1)
 		return ((perror("file"), EXIT_FAILURE));
-	while (read(infd, &buf, 1))
-		write(inpipe[1], &buf, 1);
-	exec(argv[2], inpipe, outpipe, envp);
-	exec(argv[3], inpipe, outpipe, envp);
-	close(inpipe[1]);
-	while (read(inpipe[0], &buf, 1))
-		write(outfd, &buf, 1);
+	exec_child1(argv[2], infd, pipefd, envp);
+	exec_child2(argv[3], outfd, pipefd, envp);
+	close(infd);
+	wait(0);
+	wait(0);
 	return (0);
 }
