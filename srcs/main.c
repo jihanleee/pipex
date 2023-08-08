@@ -6,7 +6,7 @@
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 16:28:41 by jihalee           #+#    #+#             */
-/*   Updated: 2023/08/07 19:26:42 by jihalee          ###   ########.fr       */
+/*   Updated: 2023/08/08 17:22:20 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,7 @@ char	**bin_path(char **envp)
 	j++;
 	path = ft_split(&(envp[i][j]), ':');
 	if (path == 0)
-	{
-		ft_putstr_fd("malloc error\n", 2);
-		exit(EXIT_FAILURE);
-	}
+		error_exit("malloc error\n");
 	return (path);
 }
 
@@ -52,18 +49,19 @@ char	*find_cmd_path(char *cmd, char **envp)
 	{
 		slashed = ft_strjoin(path[i], "/");
 		withcmd = ft_strjoin(slashed, cmd);
+		if (slashed)
+			free(slashed);
 		if (withcmd == 0)
 			return (NULL);
 		if (access(withcmd, X_OK) == 0)
 			break ;
+		free(withcmd);
+		withcmd = 0;
 		i++;
 	}
-	if (path[i] == 0)
-	{
-		ft_putstr_fd(cmd, 2);
-		ft_putstr_fd(": command not found\n", 2);
-		exit(EXIT_FAILURE);
-	}
+	free_arrays(path);
+	if (!withcmd)
+		error_exit("command not found\n");
 	return (withcmd);
 }
 
@@ -72,27 +70,24 @@ void	exec_child1(char *cmd, int infd, int pipefd[2], char **envp)
 	pid_t	cpid;
 	char	*cmd_path;
 	char	**argv;
-	char	buf;
 
 	cpid = fork();
+	if (cpid < 0)
+		error_exit("fork error\n");
 	if (cpid == 0)
 	{
+		close(pipefd[0]);
+		if (dup2(pipefd[1], 1) < 0 || dup2(infd, 0) < 0)
+			error_exit("dup2 error\n");
+		cmd_path = find_cmd_path(cmd, envp);
+		if (!cmd_path)
+			error_exit("malloc error\n");
 		argv = ft_split(cmd, ' ');
 		if (!argv)
-		{
-			ft_putstr_fd("malloc error\n", 2);
-			exit(EXIT_FAILURE);
-		}
-		cmd_path = find_cmd_path(argv[0], envp);
-		if (!cmd_path)
-		{
-			ft_putstr_fd("malloc error\n", 2);
-			exit(EXIT_FAILURE);
-		}
-		close(pipefd[0]);
-		if (infd != 1)
-			dup2(pipefd[1], 1);
+			error_exit((free(cmd_path), "malloc error\n"));
 		execve(cmd_path, argv, envp);
+		free_arrays(argv);
+		error_exit("execve error\n");
 	}
 	close(pipefd[1]);
 }
@@ -104,30 +99,25 @@ void	exec_child2(char *cmd, int outfd, int pipefd[2], char **envp)
 	char	**argv;
 	char	buf;
 
-	cpid = fork();//protect fork
+	cpid = fork();
+	if (cpid < 0)
+		error_exit("fork error\n");
 	if (cpid == 0)
 	{
+		if (dup2(pipefd[0], 0) < 0 || dup2(outfd, 1) < 0)
+			error_exit("dup2 error\n");
+		cmd_path = find_cmd_path(cmd, envp);
+		if (!cmd_path)
+			error_exit("malloc error\n");
 		argv = ft_split(cmd, ' ');
 		if (!argv)
-		{
-			ft_putstr_fd("malloc error\n", 2);
-			exit(EXIT_FAILURE);
-		}
-		cmd_path = find_cmd_path(argv[0], envp);
-		if (!cmd_path)
-		{
-			ft_putstr_fd("malloc error\n", 2);
-			exit(EXIT_FAILURE);
-		}
-		/* close(pipefd[1]); */
-		dup2(pipefd[0], 0);
-		if (outfd != 1)
-			dup2(outfd, 1);
+			error_exit((free(cmd_path), "malloc error\n"));
 		execve(cmd_path, argv, envp);
+		free_arrays(argv);
+		error_exit("execve error\n");
 	}
 	close(pipefd[0]);
 }
-
 
 int	main(int argc, char **argv, char **envp)
 {
@@ -147,8 +137,7 @@ int	main(int argc, char **argv, char **envp)
 		return ((perror("file"), EXIT_FAILURE));
 	exec_child1(argv[2], infd, pipefd, envp);
 	exec_child2(argv[3], outfd, pipefd, envp);
-	close(infd);
 	wait(0);
 	wait(0);
-	return (0);
+	return (EXIT_SUCCESS);
 }

@@ -1,28 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/07 18:36:18 by jihalee           #+#    #+#             */
-/*   Updated: 2023/08/08 17:18:07 by jihalee          ###   ########.fr       */
+/*   Created: 2023/08/08 17:17:20 by jihalee           #+#    #+#             */
+/*   Updated: 2023/08/08 17:21:04 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
-# include <unistd.h>
-# include <fcntl.h>
-# include <stdio.h>
-# include "libft.h"
-# include <string.h>
-# include <sys/types.h>
-# include <sys/wait.h>
-# include <errno.h>
+#include "pipex.h"
 
-/*utils.c*/
-void	free_arrays(char **str);
-void	error_exit(char *str);
+void	free_arrays(char **str)
+{
+	int	i;
 
-#endif
+	i = 0;
+	while (str[i])
+		free(str[i++]);
+	free(str);
+}
+
+void	error_exit(char *str)
+{
+	ft_putstr_fd(str, 2);
+	exit(EXIT_FAILURE);
+}
