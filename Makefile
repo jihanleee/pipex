@@ -28,7 +28,7 @@ OBJ_FILES = $(SRC_FILES:.c=.o)
 
 CC = cc
 
-CFLAGS = -g #-Wextra -Werror -Wall
+CFLAGS = -g -Wextra -Werror -Wall
 
 all : $(NAME)
 

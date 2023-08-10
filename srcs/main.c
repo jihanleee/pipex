@@ -6,7 +6,7 @@
 /*   By: jihalee <jihalee@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 16:28:41 by jihalee           #+#    #+#             */
-/*   Updated: 2023/08/08 17:22:20 by jihalee          ###   ########.fr       */
+/*   Updated: 2023/08/10 18:07:09 by jihalee          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@ char	**bin_path(char **envp)
 	int		i;
 	int		j;
 	char	**path;
-	char	*tmp;
 
 	i = 0;
 	while (envp[i])
@@ -79,12 +78,12 @@ void	exec_child1(char *cmd, int infd, int pipefd[2], char **envp)
 		close(pipefd[0]);
 		if (dup2(pipefd[1], 1) < 0 || dup2(infd, 0) < 0)
 			error_exit("dup2 error\n");
-		cmd_path = find_cmd_path(cmd, envp);
-		if (!cmd_path)
-			error_exit("malloc error\n");
 		argv = ft_split(cmd, ' ');
 		if (!argv)
-			error_exit((free(cmd_path), "malloc error\n"));
+			error_exit("malloc error\n");
+		cmd_path = find_cmd_path(argv[0], envp);
+		if (!cmd_path)
+			error_exit((free(argv), "malloc error\n)"));
 		execve(cmd_path, argv, envp);
 		free_arrays(argv);
 		error_exit("execve error\n");
@@ -97,7 +96,6 @@ void	exec_child2(char *cmd, int outfd, int pipefd[2], char **envp)
 	pid_t	cpid;
 	char	*cmd_path;
 	char	**argv;
-	char	buf;
 
 	cpid = fork();
 	if (cpid < 0)
@@ -106,12 +104,12 @@ void	exec_child2(char *cmd, int outfd, int pipefd[2], char **envp)
 	{
 		if (dup2(pipefd[0], 0) < 0 || dup2(outfd, 1) < 0)
 			error_exit("dup2 error\n");
-		cmd_path = find_cmd_path(cmd, envp);
-		if (!cmd_path)
-			error_exit("malloc error\n");
 		argv = ft_split(cmd, ' ');
 		if (!argv)
-			error_exit((free(cmd_path), "malloc error\n"));
+			error_exit("malloc error\n");
+		cmd_path = find_cmd_path(argv[0], envp);
+		if (!cmd_path)
+			error_exit((free(argv), "malloc error\n)"));
 		execve(cmd_path, argv, envp);
 		free_arrays(argv);
 		error_exit("execve error\n");
@@ -124,8 +122,6 @@ int	main(int argc, char **argv, char **envp)
 	int		infd;
 	int		outfd;
 	int		pipefd[2];
-	char	buf;
-	int		wstatus;
 
 	if (argc != 5)
 		return ((ft_putstr_fd("Wrong arguments\n", 2), EXIT_FAILURE));
