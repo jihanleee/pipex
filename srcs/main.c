@@ -12,7 +12,7 @@
 
 #include "pipex.h"
 
-char	**bin_path(char **envp)
+char	**bin_path(char **argv, char **envp)
 {
 	int		i;
 	int		j;
@@ -31,27 +31,30 @@ char	**bin_path(char **envp)
 	j++;
 	path = ft_split(&(envp[i][j]), ':');
 	if (path == 0)
+	{
+		free_arrays(argv);
 		error_exit("malloc error\n");
+	}
 	return (path);
 }
 
-char	*find_cmd_path(char *cmd, char **envp)
+char	*find_cmd_path(char **argv, char **envp)
 {
 	int		i;
 	char	*slashed;
 	char	*withcmd;
 	char	**path;
 
-	path = bin_path(envp);
+	path = bin_path(argv, envp);
 	i = 0;
 	while (path[i])
 	{
 		slashed = ft_strjoin(path[i], "/");
-		withcmd = ft_strjoin(slashed, cmd);
+		withcmd = ft_strjoin(slashed, argv[0]);
 		if (slashed)
 			free(slashed);
 		if (withcmd == 0)
-			return (NULL);
+			return (free_arrays(path), NULL);
 		if (access(withcmd, X_OK) == 0)
 			break ;
 		free(withcmd);
@@ -60,7 +63,7 @@ char	*find_cmd_path(char *cmd, char **envp)
 	}
 	free_arrays(path);
 	if (!withcmd)
-		error_exit("command not found\n");
+		error_exit((free_arrays(argv), "command not found\n"));
 	return (withcmd);
 }
 
@@ -81,11 +84,12 @@ void	exec_child1(char *cmd, int infd, int pipefd[2], char **envp)
 		argv = ft_split(cmd, ' ');
 		if (!argv)
 			error_exit("malloc error\n");
-		cmd_path = find_cmd_path(argv[0], envp);
+		cmd_path = find_cmd_path(argv, envp);
 		if (!cmd_path)
-			error_exit((free(argv), "malloc error\n)"));
+			error_exit((free_arrays(argv), "malloc error\n)"));
 		execve(cmd_path, argv, envp);
 		free_arrays(argv);
+		free(cmd_path);
 		error_exit("execve error\n");
 	}
 	close(pipefd[1]);
@@ -107,11 +111,12 @@ void	exec_child2(char *cmd, int outfd, int pipefd[2], char **envp)
 		argv = ft_split(cmd, ' ');
 		if (!argv)
 			error_exit("malloc error\n");
-		cmd_path = find_cmd_path(argv[0], envp);
+		cmd_path = find_cmd_path(argv, envp);
 		if (!cmd_path)
-			error_exit((free(argv), "malloc error\n)"));
+			error_exit((free_arrays(argv), "malloc error\n)"));
 		execve(cmd_path, argv, envp);
 		free_arrays(argv);
+		free(cmd_path);
 		error_exit("execve error\n");
 	}
 	close(pipefd[0]);
